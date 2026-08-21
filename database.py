@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # SQLite file lives next to this script as claims.db
 DATABASE_URL = "sqlite:///./claims.db"

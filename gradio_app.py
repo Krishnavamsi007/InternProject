@@ -1,10 +1,10 @@
 import os
 import pickle
 
+import gradio as gr
 import numpy as np
 import pandas as pd
 import requests
-import gradio as gr
 
 MODEL_PATH = "fraud_detection_model.pkl"
 DATA_PATH = "synthetic_health_claims.csv"
@@ -256,7 +256,7 @@ def _render_explanation(top_n: int = 6) -> str:
 
     try:
         feature_names = pipeline.named_steps["preprocessor"].get_feature_names_out()
-    except Exception:
+    except AttributeError:
         feature_names = [f"feature_{i}" for i in range(len(clf.feature_importances_))]
 
     importances = clf.feature_importances_

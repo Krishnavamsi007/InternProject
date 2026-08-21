@@ -1,5 +1,5 @@
 import pickle
-from typing import List
+from typing import Annotated
 
 import pandas as pd
 from fastapi import Depends, FastAPI, HTTPException
@@ -79,7 +79,7 @@ def health():
 
 
 @app.post("/claim", response_model=ClaimResponse)
-def create_claim(claim: ClaimRequest, db: Session = Depends(get_db)):
+def create_claim(claim: ClaimRequest, db: Annotated[Session, Depends(get_db)]):
     """Score a claim for fraud and persist both the claim and the verdict."""
     row = _to_raw_row(claim)
     row_fe = add_engineered_features(row).reindex(columns=feature_columns)
@@ -107,7 +107,7 @@ def create_claim(claim: ClaimRequest, db: Session = Depends(get_db)):
 
 
 @app.get("/claim/{claim_id}", response_model=ClaimLookupResponse)
-def get_claim(claim_id: int, db: Session = Depends(get_db)):
+def get_claim(claim_id: int, db: Annotated[Session, Depends(get_db)]):
     """Look up a previously scored claim by id."""
     db_claim = db.query(models.Claim).filter(models.Claim.id == claim_id).first()
 
@@ -123,8 +123,8 @@ def get_claim(claim_id: int, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/claims", response_model=List[ClaimHistoryItem])
-def list_claims(limit: int = 50, db: Session = Depends(get_db)):
+@app.get("/claims", response_model=list[ClaimHistoryItem])
+def list_claims(limit: int = 50, db: Annotated[Session, Depends(get_db)]):
     """Most recent claims first, capped at `limit` (default 50, max 200)."""
     limit = max(1, min(limit, 200))
     db_claims = (
