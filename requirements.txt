@@ -4,8 +4,6 @@ pydantic
 sqlalchemy
 pandas
 numpy
-bandit 
-ruff
 scikit-learn
 gradio
 requests

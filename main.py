@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 import models
-from database import Base, SessionLocal, engine, get_db
+from database import Base, engine, get_db
 from feature_engineering import add_engineered_features
 from schemas import ClaimHistoryItem, ClaimLookupResponse, ClaimRequest, ClaimResponse
 

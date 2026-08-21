@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from feature_engineering import add_engineered_features, TARGET_COLUMN
+from feature_engineering import TARGET_COLUMN, add_engineered_features
 
 DATA_PATH = "synthetic_health_claims.csv"
 MODEL_PATH = "fraud_detection_model.pkl"

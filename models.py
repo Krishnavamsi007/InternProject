@@ -29,7 +29,7 @@ class Claim(Base):
     provider_city = Column(String(100))
     provider_state = Column(String(10))
     diagnosis_code = Column(String(20))
-    procedure_code = Column(String(20))
+    procedure_code = Column(Integer)
     number_of_procedures = Column(Integer)
     admission_type = Column(String(50))
     discharge_type = Column(String(50))
