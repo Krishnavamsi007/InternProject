@@ -124,7 +124,7 @@ def get_claim(claim_id: int, db: Annotated[Session, Depends(get_db)]):
 
 
 @app.get("/claims", response_model=list[ClaimHistoryItem])
-def list_claims(limit: int = 50, db: Annotated[Session, Depends(get_db)]):
+def list_claims(db: Annotated[Session, Depends(get_db)], limit: int = 50):
     """Most recent claims first, capped at `limit` (default 50, max 200)."""
     limit = max(1, min(limit, 200))
     db_claims = (
