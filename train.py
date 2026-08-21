@@ -19,7 +19,9 @@ X_raw = df.drop(columns=[TARGET_COLUMN])
 
 X = add_engineered_features(X_raw)
 
-categorical_cols = X.select_dtypes(include=["object", "category", "string"]).columns.tolist()
+categorical_cols = X.select_dtypes(
+    include=["object", "category", "string"]
+).columns.tolist()
 numeric_cols = [c for c in X.columns if c not in categorical_cols]
 
 feature_columns = numeric_cols + categorical_cols

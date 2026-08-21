@@ -43,8 +43,8 @@ class Claim(Base):
     claim_submitted_late = Column(Boolean)
 
     # --- model verdict, filled in at prediction time ------------------------
-    prediction = Column(Integer)       # 0 = not fraudulent, 1 = fraudulent
+    prediction = Column(Integer)  # 0 = not fraudulent, 1 = fraudulent
     probability = Column(Float)
-    risk_tier = Column(String(10))     # "low" | "medium" | "high"
+    risk_tier = Column(String(10))  # "low" | "medium" | "high"
 
     created_at = Column(DateTime, default=datetime.utcnow)

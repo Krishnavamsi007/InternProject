@@ -10,9 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./claims.db")
 
 # check_same_thread=False is required for SQLite when used with FastAPI's
 # threaded request handling.
-engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

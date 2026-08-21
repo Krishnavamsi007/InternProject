@@ -43,34 +43,38 @@ def _to_raw_row(claim: ClaimRequest) -> pd.DataFrame:
     """Map the snake_case API schema onto the raw column names the training
     pipeline / feature_engineering.py expect (mirrors the original dataset
     schema)."""
-    return pd.DataFrame([{
-        "Claim_Date": claim.claim_date,
-        "Service_Date": claim.service_date,
-        "Policy_Expiration_Date": claim.policy_expiration_date,
-        "Claim_Amount": claim.claim_amount,
-        "Patient_Age": claim.patient_age,
-        "Patient_Gender": claim.patient_gender,
-        "Patient_City": claim.patient_city,
-        "Patient_State": claim.patient_state,
-        "Hospital_ID": 0,  # placeholder, dropped by feature engineering
-        "Provider_Type": claim.provider_type,
-        "Provider_Specialty": claim.provider_specialty,
-        "Provider_City": claim.provider_city,
-        "Provider_State": claim.provider_state,
-        "Diagnosis_Code": claim.diagnosis_code,
-        "Procedure_Code": claim.procedure_code,
-        "Number_of_Procedures": claim.number_of_procedures,
-        "Admission_Type": claim.admission_type,
-        "Discharge_Type": claim.discharge_type,
-        "Length_of_Stay_Days": claim.length_of_stay_days,
-        "Service_Type": claim.service_type,
-        "Deductible_Amount": claim.deductible_amount,
-        "CoPay_Amount": claim.copay_amount,
-        "Number_of_Previous_Claims_Patient": claim.num_previous_claims_patient,
-        "Number_of_Previous_Claims_Provider": claim.num_previous_claims_provider,
-        "Provider_Patient_Distance_Miles": claim.provider_patient_distance_miles,
-        "Claim_Submitted_Late": claim.claim_submitted_late,
-    }])
+    return pd.DataFrame(
+        [
+            {
+                "Claim_Date": claim.claim_date,
+                "Service_Date": claim.service_date,
+                "Policy_Expiration_Date": claim.policy_expiration_date,
+                "Claim_Amount": claim.claim_amount,
+                "Patient_Age": claim.patient_age,
+                "Patient_Gender": claim.patient_gender,
+                "Patient_City": claim.patient_city,
+                "Patient_State": claim.patient_state,
+                "Hospital_ID": 0,  # placeholder, dropped by feature engineering
+                "Provider_Type": claim.provider_type,
+                "Provider_Specialty": claim.provider_specialty,
+                "Provider_City": claim.provider_city,
+                "Provider_State": claim.provider_state,
+                "Diagnosis_Code": claim.diagnosis_code,
+                "Procedure_Code": claim.procedure_code,
+                "Number_of_Procedures": claim.number_of_procedures,
+                "Admission_Type": claim.admission_type,
+                "Discharge_Type": claim.discharge_type,
+                "Length_of_Stay_Days": claim.length_of_stay_days,
+                "Service_Type": claim.service_type,
+                "Deductible_Amount": claim.deductible_amount,
+                "CoPay_Amount": claim.copay_amount,
+                "Number_of_Previous_Claims_Patient": claim.num_previous_claims_patient,
+                "Number_of_Previous_Claims_Provider": claim.num_previous_claims_provider,
+                "Provider_Patient_Distance_Miles": claim.provider_patient_distance_miles,
+                "Claim_Submitted_Late": claim.claim_submitted_late,
+            }
+        ]
+    )
 
 
 @app.get("/health")
@@ -128,10 +132,7 @@ def list_claims(db: Annotated[Session, Depends(get_db)], limit: int = 50):
     """Most recent claims first, capped at `limit` (default 50, max 200)."""
     limit = max(1, min(limit, 200))
     db_claims = (
-        db.query(models.Claim)
-        .order_by(models.Claim.id.desc())
-        .limit(limit)
-        .all()
+        db.query(models.Claim).order_by(models.Claim.id.desc()).limit(limit).all()
     )
 
     return [
