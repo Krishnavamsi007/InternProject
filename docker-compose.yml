@@ -1,49 +1,30 @@
 version: '3.8'
 
-services:
-  # FastAPI Application
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fraud_detection_api
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
-      - ./claims.db:/app/claims.db
-    environment:
-      - DATABASE_URL=sqlite:///./claims.db
-      - FRAUD_API_URL=http://api:8000
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+# One container running both FastAPI (:8000) and Gradio (:7860) -- see
+# start.sh / Dockerfile. This replaces the earlier two-service (api +
+# gradio) layout, since both processes now live in a single image.
 
-  # Gradio Application (UI Frontend)
-  gradio:
+services:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fraud_detection_ui
+    container_name: fraud_detection_app
     ports:
-      - "7860:7860"
+      - "8000:8000"   # FastAPI
+      - "7860:7860"   # Gradio
     volumes:
-      - ./data:/app/data
+      - ./data:/app/data   # persists claims.db across restarts
     environment:
-      - FRAUD_API_URL=http://api:8000
-    command: python gradio_app.py
-    depends_on:
-      - api
+      - DATABASE_URL=sqlite:////app/data/claims.db
+      - FRAUD_API_URL=http://127.0.0.1:8000
+      - GRADIO_SHARE=false   # set true to also get a public gradio.live link
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8000/health && curl -f http://localhost:7860/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 10s
 
 volumes:
   data:

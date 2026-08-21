@@ -32,11 +32,11 @@ jobs:
 
       # - name: Run tests with coverage
       #   run: |
-      #     pytest --cov=app --cov-report=term-missing --cov-fail-under=85 -q
+      #     pytest --cov=. --cov-report=term-missing --cov-fail-under=85 -q
 
       - name: Security check with Bandit
         run: |
-          bandit -r app
+          bandit -r . --exclude ./venv,./__pycache__
 
       - name: Set up Docker Buildx
         if: github.event_name == 'push'

@@ -1,8 +1,12 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+import os
 
-# SQLite file lives next to this script as claims.db
-DATABASE_URL = "sqlite:///./claims.db"
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+# Defaults to a SQLite file next to this script. Overridable via the
+# DATABASE_URL env var -- e.g. in Docker, set to a path under the mounted
+# /app/data volume so the database survives container restarts.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./claims.db")
 
 # check_same_thread=False is required for SQLite when used with FastAPI's
 # threaded request handling.

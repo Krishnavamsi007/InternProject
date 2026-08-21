@@ -1,10 +1,10 @@
 import os
 import pickle
 
-import gradio as gr
 import numpy as np
 import pandas as pd
 import requests
+import gradio as gr
 
 MODEL_PATH = "fraud_detection_model.pkl"
 DATA_PATH = "synthetic_health_claims.csv"
@@ -256,7 +256,7 @@ def _render_explanation(top_n: int = 6) -> str:
 
     try:
         feature_names = pipeline.named_steps["preprocessor"].get_feature_names_out()
-    except AttributeError:
+    except Exception:
         feature_names = [f"feature_{i}" for i in range(len(clf.feature_importances_))]
 
     importances = clf.feature_importances_
@@ -716,10 +716,13 @@ theme = gr.themes.Base(
 
 with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as demo:
 
-    gr.HTML("""
+    gr.HTML(f"""
     <div id="app-header">
       <p class="eyebrow">Health Insurance &middot; Special Investigations Unit</p>
       <h1>Claims Fraud Review Desk</h1>
+      <p class="sub">Score a claim with <strong>{model_name}</strong>, save it to the database,
+      look any claim back up by ID, or browse the full claim history — all backed
+      by the FastAPI service at <code style="color:#FBEFFF">{API_URL}</code>.</p>
     </div>
     """)
 
@@ -836,4 +839,8 @@ with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as
             )
 
 if __name__ == "__main__":
-    demo.launch(share=True)
+    # server_name="0.0.0.0" is required for Docker's -p port mapping to reach
+    # this process -- the Gradio default of 127.0.0.1 only accepts
+    # connections from inside the container itself.
+    gradio_share = os.getenv("GRADIO_SHARE", "true").lower() == "true"
+    demo.launch(server_name="0.0.0.0", server_port=7860, share=gradio_share)
