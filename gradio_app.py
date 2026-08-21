@@ -1,5 +1,5 @@
 import os
-import pickle
+import pickle  # nosec B403 - loading a model file this project trains and saves itself, not untrusted input
 
 import gradio as gr
 import numpy as np
@@ -18,7 +18,7 @@ API_URL = os.getenv("FRAUD_API_URL", "http://127.0.0.1:8000")
 # heaviest" panel from the trained pipeline's feature importances.
 # --------------------------------------------------------------------------
 with open(MODEL_PATH, "rb") as f:
-    bundle = pickle.load(f)
+    bundle = pickle.load(f)  # nosec B301 - trusted, locally-generated model artifact, not external input
 
 pipeline = bundle["pipeline"]
 model_name = bundle["model_name"]
@@ -843,4 +843,8 @@ if __name__ == "__main__":
     # this process -- the Gradio default of 127.0.0.1 only accepts
     # connections from inside the container itself.
     gradio_share = os.getenv("GRADIO_SHARE", "true").lower() == "true"
-    demo.launch(server_name="0.0.0.0", server_port=7860, share=gradio_share)
+    demo.launch(
+        server_name="0.0.0.0",  # nosec B104 - required so Docker's -p mapping can reach this process; not directly internet-exposed on its own
+        server_port=7860,
+        share=gradio_share,
+    )

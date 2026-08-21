@@ -1,4 +1,4 @@
-import pickle
+import pickle  # nosec B403 - used to save (not load) the trained model artifact
 
 import pandas as pd
 from sklearn.compose import ColumnTransformer
@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from feature_engineering import TARGET_COLUMN, add_engineered_features
+from feature_engineering import add_engineered_features, TARGET_COLUMN
 
 DATA_PATH = "synthetic_health_claims.csv"
 MODEL_PATH = "fraud_detection_model.pkl"
@@ -19,9 +19,7 @@ X_raw = df.drop(columns=[TARGET_COLUMN])
 
 X = add_engineered_features(X_raw)
 
-categorical_cols = X.select_dtypes(
-    include=["object", "category", "string"]
-).columns.tolist()
+categorical_cols = X.select_dtypes(include=["object", "category", "string"]).columns.tolist()
 numeric_cols = [c for c in X.columns if c not in categorical_cols]
 
 feature_columns = numeric_cols + categorical_cols
