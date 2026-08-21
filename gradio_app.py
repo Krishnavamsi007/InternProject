@@ -716,7 +716,7 @@ theme = gr.themes.Base(
 
 with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as demo:
 
-    gr.HTML(f"""
+    gr.HTML("""
     <div id="app-header">
       <p class="eyebrow">Health Insurance &middot; Special Investigations Unit</p>
       <h1>Claims Fraud Review Desk</h1>
