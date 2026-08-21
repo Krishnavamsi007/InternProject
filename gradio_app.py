@@ -1,10 +1,10 @@
 import os
 import pickle
 
+import gradio as gr
 import numpy as np
 import pandas as pd
 import requests
-import gradio as gr
 
 MODEL_PATH = "fraud_detection_model.pkl"
 DATA_PATH = "synthetic_health_claims.csv"
@@ -46,31 +46,14 @@ CHOICES = {
 # Tab 1 — Assess & Save: calls POST /claim
 # --------------------------------------------------------------------------
 def submit_claim(
-    claim_date,
-    service_date,
-    policy_expiration_date,
-    claim_amount,
-    patient_age,
-    patient_gender,
-    patient_city,
-    patient_state,
-    provider_type,
-    provider_specialty,
-    provider_city,
-    provider_state,
-    diagnosis_code,
-    procedure_code,
-    number_of_procedures,
-    admission_type,
-    discharge_type,
-    length_of_stay_days,
-    service_type,
-    deductible_amount,
-    copay_amount,
-    num_previous_claims_patient,
-    num_previous_claims_provider,
-    provider_patient_distance_miles,
-    claim_submitted_late,
+    claim_date, service_date, policy_expiration_date,
+    claim_amount, patient_age, patient_gender, patient_city, patient_state,
+    provider_type, provider_specialty, provider_city, provider_state,
+    diagnosis_code, procedure_code, number_of_procedures,
+    admission_type, discharge_type, length_of_stay_days, service_type,
+    deductible_amount, copay_amount,
+    num_previous_claims_patient, num_previous_claims_provider,
+    provider_patient_distance_miles, claim_submitted_late,
 ):
     payload = {
         "claim_date": claim_date,
@@ -169,9 +152,7 @@ def fetch_history(limit):
         limit_int = 50
 
     try:
-        resp = requests.get(
-            f"{API_URL}/claims", params={"limit": limit_int}, timeout=10
-        )
+        resp = requests.get(f"{API_URL}/claims", params={"limit": limit_int}, timeout=10)
     except (requests.ConnectionError, requests.Timeout) as e:
         return _render_unreachable_error(e)
 
@@ -198,14 +179,14 @@ def _render_history_table(claims):
         date = c["created_at"].split("T")[0] if c.get("created_at") else "—"
         rows += f"""
         <tr>
-          <td class="hist-id">#{c["claim_id"]}</td>
+          <td class="hist-id">#{c['claim_id']}</td>
           <td>{date}</td>
-          <td>{c["patient_age"]}</td>
-          <td>{c["provider_type"]}</td>
-          <td>${c["claim_amount"]:,.2f}</td>
-          <td><span class="hist-verdict {verdict_class}">{c["prediction"]}</span></td>
+          <td>{c['patient_age']}</td>
+          <td>{c['provider_type']}</td>
+          <td>${c['claim_amount']:,.2f}</td>
+          <td><span class="hist-verdict {verdict_class}">{c['prediction']}</span></td>
           <td><span class="tier-chip tier-{tier}">{tier.capitalize()}</span></td>
-          <td class="hist-mono">{c["probability"] * 100:.1f}%</td>
+          <td class="hist-mono">{c['probability']*100:.1f}%</td>
         </tr>
         """
 
@@ -236,11 +217,7 @@ def _render_result_card(claim_id, prediction, probability, tier, created_at=None
     verdict_class = "verdict-flag" if is_fraud else "verdict-clear"
     icon = "&#9888;" if is_fraud else "&#10003;"
     tier_label = {"low": "Low risk", "medium": "Medium risk", "high": "High risk"}[tier]
-    timestamp_html = (
-        f'<div class="claim-meta">Recorded {created_at.split("T")[0]}</div>'
-        if created_at
-        else ""
-    )
+    timestamp_html = f'<div class="claim-meta">Recorded {created_at.split("T")[0]}</div>' if created_at else ""
 
     return f"""
     <div class="result-card tier-glow-{tier}">
@@ -279,7 +256,7 @@ def _render_explanation(top_n: int = 6) -> str:
 
     try:
         feature_names = pipeline.named_steps["preprocessor"].get_feature_names_out()
-    except Exception:
+    except (AttributeError, ValueError):
         feature_names = [f"feature_{i}" for i in range(len(clf.feature_importances_))]
 
     importances = clf.feature_importances_
@@ -738,6 +715,7 @@ theme = gr.themes.Base(
 )
 
 with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as demo:
+
     gr.HTML(f"""
     <div id="app-header">
       <p class="eyebrow">Health Insurance &middot; Special Investigations Unit</p>
@@ -752,127 +730,51 @@ with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as
         with gr.Tab("🩺  Assess & save claim"):
             with gr.Row(equal_height=False):
                 with gr.Column(scale=3, elem_id="form-panel"):
+
                     gr.Markdown("Dates", elem_classes="section-label")
                     with gr.Row():
-                        claim_date = gr.Textbox(
-                            label="Claim date (YYYY-MM-DD)", value="2024-06-01"
-                        )
-                        service_date = gr.Textbox(
-                            label="Service date (YYYY-MM-DD)", value="2024-05-20"
-                        )
-                        policy_expiration_date = gr.Textbox(
-                            label="Policy expiration date (YYYY-MM-DD)",
-                            value="2026-01-01",
-                        )
+                        claim_date = gr.Textbox(label="Claim date (YYYY-MM-DD)", value="2024-06-01")
+                        service_date = gr.Textbox(label="Service date (YYYY-MM-DD)", value="2024-05-20")
+                        policy_expiration_date = gr.Textbox(label="Policy expiration date (YYYY-MM-DD)", value="2026-01-01")
 
                     gr.Markdown("Financials", elem_classes="section-label")
                     with gr.Row():
                         claim_amount = gr.Number(label="Claim amount ($)", value=5000)
-                        deductible_amount = gr.Number(
-                            label="Deductible amount ($)", value=500
-                        )
+                        deductible_amount = gr.Number(label="Deductible amount ($)", value=500)
                         copay_amount = gr.Number(label="Co-pay amount ($)", value=50)
 
                     with gr.Row():
                         with gr.Column():
                             gr.Markdown("Patient", elem_classes="section-label")
-                            patient_age = gr.Number(
-                                label="Patient age", value=40, precision=0
-                            )
-                            patient_gender = gr.Dropdown(
-                                CHOICES["Patient_Gender"],
-                                label="Patient gender",
-                                value=CHOICES["Patient_Gender"][0],
-                            )
-                            patient_city = gr.Dropdown(
-                                CHOICES["Patient_City"],
-                                label="Patient city",
-                                value=CHOICES["Patient_City"][0],
-                            )
-                            patient_state = gr.Dropdown(
-                                CHOICES["Patient_State"],
-                                label="Patient state",
-                                value=CHOICES["Patient_State"][0],
-                            )
-                            num_previous_claims_patient = gr.Number(
-                                label="Previous claims by patient", value=0, precision=0
-                            )
+                            patient_age = gr.Number(label="Patient age", value=40, precision=0)
+                            patient_gender = gr.Dropdown(CHOICES["Patient_Gender"], label="Patient gender", value=CHOICES["Patient_Gender"][0])
+                            patient_city = gr.Dropdown(CHOICES["Patient_City"], label="Patient city", value=CHOICES["Patient_City"][0])
+                            patient_state = gr.Dropdown(CHOICES["Patient_State"], label="Patient state", value=CHOICES["Patient_State"][0])
+                            num_previous_claims_patient = gr.Number(label="Previous claims by patient", value=0, precision=0)
 
                         with gr.Column():
                             gr.Markdown("Provider", elem_classes="section-label")
-                            provider_type = gr.Dropdown(
-                                CHOICES["Provider_Type"],
-                                label="Provider type",
-                                value=CHOICES["Provider_Type"][0],
-                            )
-                            provider_specialty = gr.Dropdown(
-                                CHOICES["Provider_Specialty"],
-                                label="Provider specialty",
-                                value=CHOICES["Provider_Specialty"][0],
-                            )
-                            provider_city = gr.Dropdown(
-                                CHOICES["Provider_City"],
-                                label="Provider city",
-                                value=CHOICES["Provider_City"][0],
-                            )
-                            provider_state = gr.Dropdown(
-                                CHOICES["Provider_State"],
-                                label="Provider state",
-                                value=CHOICES["Provider_State"][0],
-                            )
-                            num_previous_claims_provider = gr.Number(
-                                label="Previous claims by provider",
-                                value=0,
-                                precision=0,
-                            )
+                            provider_type = gr.Dropdown(CHOICES["Provider_Type"], label="Provider type", value=CHOICES["Provider_Type"][0])
+                            provider_specialty = gr.Dropdown(CHOICES["Provider_Specialty"], label="Provider specialty", value=CHOICES["Provider_Specialty"][0])
+                            provider_city = gr.Dropdown(CHOICES["Provider_City"], label="Provider city", value=CHOICES["Provider_City"][0])
+                            provider_state = gr.Dropdown(CHOICES["Provider_State"], label="Provider state", value=CHOICES["Provider_State"][0])
+                            num_previous_claims_provider = gr.Number(label="Previous claims by provider", value=0, precision=0)
 
-                    gr.Markdown(
-                        "Claim &amp; service details", elem_classes="section-label"
-                    )
+                    gr.Markdown("Claim &amp; service details", elem_classes="section-label")
                     with gr.Row():
-                        diagnosis_code = gr.Dropdown(
-                            CHOICES["Diagnosis_Code"],
-                            label="Diagnosis code",
-                            value=CHOICES["Diagnosis_Code"][0],
-                        )
-                        procedure_code = gr.Dropdown(
-                            CHOICES["Procedure_Code"],
-                            label="Procedure code",
-                            value=CHOICES["Procedure_Code"][0],
-                        )
-                        number_of_procedures = gr.Number(
-                            label="Number of procedures", value=1, precision=0
-                        )
+                        diagnosis_code = gr.Dropdown(CHOICES["Diagnosis_Code"], label="Diagnosis code", value=CHOICES["Diagnosis_Code"][0])
+                        procedure_code = gr.Dropdown(CHOICES["Procedure_Code"], label="Procedure code", value=CHOICES["Procedure_Code"][0])
+                        number_of_procedures = gr.Number(label="Number of procedures", value=1, precision=0)
                     with gr.Row():
-                        admission_type = gr.Dropdown(
-                            CHOICES["Admission_Type"],
-                            label="Admission type",
-                            value=CHOICES["Admission_Type"][0],
-                        )
-                        discharge_type = gr.Dropdown(
-                            CHOICES["Discharge_Type"],
-                            label="Discharge type",
-                            value=CHOICES["Discharge_Type"][0],
-                        )
-                        service_type = gr.Dropdown(
-                            CHOICES["Service_Type"],
-                            label="Service type",
-                            value=CHOICES["Service_Type"][0],
-                        )
+                        admission_type = gr.Dropdown(CHOICES["Admission_Type"], label="Admission type", value=CHOICES["Admission_Type"][0])
+                        discharge_type = gr.Dropdown(CHOICES["Discharge_Type"], label="Discharge type", value=CHOICES["Discharge_Type"][0])
+                        service_type = gr.Dropdown(CHOICES["Service_Type"], label="Service type", value=CHOICES["Service_Type"][0])
                     with gr.Row():
-                        length_of_stay_days = gr.Number(
-                            label="Length of stay (days)", value=1, precision=0
-                        )
-                        provider_patient_distance_miles = gr.Number(
-                            label="Provider-patient distance (miles)", value=20
-                        )
-                        claim_submitted_late = gr.Checkbox(
-                            label="Claim submitted late?", value=False
-                        )
+                        length_of_stay_days = gr.Number(label="Length of stay (days)", value=1, precision=0)
+                        provider_patient_distance_miles = gr.Number(label="Provider-patient distance (miles)", value=20)
+                        claim_submitted_late = gr.Checkbox(label="Claim submitted late?", value=False)
 
-                    predict_btn = gr.Button(
-                        "Assess & save claim", elem_id="predict-btn"
-                    )
+                    predict_btn = gr.Button("Assess & save claim", elem_id="predict-btn")
                     gr.Markdown("&nbsp;")
 
                 with gr.Column(scale=2, elem_id="result-column"):
@@ -882,31 +784,14 @@ with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as
             predict_btn.click(
                 fn=submit_claim,
                 inputs=[
-                    claim_date,
-                    service_date,
-                    policy_expiration_date,
-                    claim_amount,
-                    patient_age,
-                    patient_gender,
-                    patient_city,
-                    patient_state,
-                    provider_type,
-                    provider_specialty,
-                    provider_city,
-                    provider_state,
-                    diagnosis_code,
-                    procedure_code,
-                    number_of_procedures,
-                    admission_type,
-                    discharge_type,
-                    length_of_stay_days,
-                    service_type,
-                    deductible_amount,
-                    copay_amount,
-                    num_previous_claims_patient,
-                    num_previous_claims_provider,
-                    provider_patient_distance_miles,
-                    claim_submitted_late,
+                    claim_date, service_date, policy_expiration_date,
+                    claim_amount, patient_age, patient_gender, patient_city, patient_state,
+                    provider_type, provider_specialty, provider_city, provider_state,
+                    diagnosis_code, procedure_code, number_of_procedures,
+                    admission_type, discharge_type, length_of_stay_days, service_type,
+                    deductible_amount, copay_amount,
+                    num_previous_claims_patient, num_previous_claims_provider,
+                    provider_patient_distance_miles, claim_submitted_late,
                 ],
                 outputs=[result_html, explanation_html],
             )
@@ -933,19 +818,9 @@ with gr.Blocks(title="Claims Fraud Review Desk", theme=theme, css=CUSTOM_CSS) as
 
         with gr.Tab("📋  Claim history"):
             with gr.Row(elem_id="history-controls"):
-                history_limit = gr.Number(
-                    label="Show last N claims",
-                    value=50,
-                    precision=0,
-                    scale=0,
-                    min_width=160,
-                )
-                refresh_btn = gr.Button(
-                    "Refresh", elem_id="search-btn", scale=0, min_width=120
-                )
-            history_table = gr.HTML(
-                _render_lookup_placeholder("Loading claim history…")
-            )
+                history_limit = gr.Number(label="Show last N claims", value=50, precision=0, scale=0, min_width=160)
+                refresh_btn = gr.Button("Refresh", elem_id="search-btn", scale=0, min_width=120)
+            history_table = gr.HTML(_render_lookup_placeholder("Loading claim history…"))
 
             refresh_btn.click(
                 fn=fetch_history,
