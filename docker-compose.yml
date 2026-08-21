@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_detection_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./claims.db:/app/claims.db
+    environment:
+      - DATABASE_URL=sqlite:///./claims.db
+      - FRAUD_API_URL=http://api:8000
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # Gradio Application (UI Frontend)
+  gradio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fraud_detection_ui
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - FRAUD_API_URL=http://api:8000
+    command: python gradio_app.py
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  data:
